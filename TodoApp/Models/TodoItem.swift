@@ -1,20 +1,20 @@
 import Foundation
 
-struct TodoItem: Identifiable {
+struct TodoItem: Identifiable, Equatable {
     
-    var id = UUID().uuidString
+    let id: String
     
-    var text: String
-    var importance: Importance?
-    var deadline: Date?
-    var isDone: Bool
+    let text: String
+    let importance: Importance
+    let deadline: Date?
+    let isDone: Bool
     
     let dateCreation: Date
-    var dateChanging: Date?
+    let dateChanging: Date?
     
     
-//    кастомный инициализатор необходим, так как нам нужно иметь возможность как вручную давать id (напрмер, при распарсинге), так и автоматически
-    init(id: String = UUID().uuidString, text: String, importance: Importance? = nil, deadline: Date? = nil, isDone: Bool, dateCreation: Date, dateChanging: Date? = nil) {
+//    кастомный инициализатор необходим, так как нам нужно иметь возможность как вручную задавать id (напрмер, при распарсинге), так и автоматически
+    init(id: String = UUID().uuidString, text: String, importance: Importance, deadline: Date? = nil, isDone: Bool, dateCreation: Date, dateChanging: Date? = nil) {
         self.id = id
         self.text = text
         self.importance = importance

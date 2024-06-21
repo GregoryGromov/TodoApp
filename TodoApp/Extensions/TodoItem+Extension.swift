@@ -12,7 +12,7 @@ extension TodoItem {
             "dateCreation": self.dateCreation.convertToString()
         ] as [String : Any]
         
-        if let importance = importance, importance != .ordinary {
+        if importance != .ordinary {
             dictionary["importance"] = importance.rawValue
         }
         
@@ -29,52 +29,54 @@ extension TodoItem {
     
     
     
-
     static func parse(json: Any) -> TodoItem? {
         
+        guard let jsonObject = json as? [String: Any] else {
+            print("Error converting input json to type [String: Any]")
+            return nil
+        }
         
-        
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: []) else { return nil }
-        
-        guard let jsonObject = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] else { return nil }
-        
-// извлекаем из JSON обязательные поля
+        // извлекаем из JSON обязательные поля
         guard let id = jsonObject["id"] as? String,
               let text = jsonObject["text"] as? String,
               let isDone = jsonObject["isDone"] as? Bool,
               let dateCreationAsString = jsonObject["dateCreation"] as? String
+              
         else { return nil }
         
-// проверяем, удалось ли перевести dateCreation из типа String в тип Date
-        guard let dateCreation = dateCreationAsString.convertToDate() else { return nil }
+        let importanceString = jsonObject["importance"] as? String
         
-// определяем необязательные поля и изначально инициализируем их nil
-        var importance: Importance? = nil
+        var importance = Importance.ordinary
+        
+        if let importanceFromJSON = importanceString?.convertToImportance() {
+            importance = importanceFromJSON
+        }
+        
+        // проверяем, удалось ли перевести dateCreation из типа String в тип Date
+        guard 
+            let dateCreation = dateCreationAsString.convertToDate()
+            
+        else { return nil }
+        
+        // определяем необязательные поля и изначально инициализируем их nil
         var deadline: Date? = nil
         var dateChanging: Date? = nil
         
-// проверяем, задана ли важность
-        if let importanceAsString = jsonObject["importance"] as? String {
-            if let importanceFromJSON = importanceAsString.convertToImportance() {
-                importance = importanceFromJSON
-            }
-        }
-        
-// проверяем, задан ли дедлайн
+        // проверяем, задан ли дедлайн
         if let deadlineAsString = jsonObject["deadline"] as? String {
             if let deadlineFromJSON = deadlineAsString.convertToDate() {
                 deadline = deadlineFromJSON
             }
         }
         
-// проверяем, задана ли дата изменения
+        // проверяем, задана ли дата изменения
         if let dateChangingAsString = jsonObject["dateChanging"] as? String {
             if let dateChangingFromJSON = dateChangingAsString.convertToDate() {
                 dateChanging = dateChangingFromJSON
             }
         }
         
-// создаем экземпляр TodoItem с ранее полученными данными
+        // создаем экземпляр TodoItem с ранее полученными данными
         let todoItem = TodoItem(id: id, text: text, importance: importance, deadline: deadline, isDone: isDone, dateCreation: dateCreation, dateChanging: dateChanging)
         return todoItem
         
@@ -101,38 +103,35 @@ extension TodoItem {
             let elements = line.components(separatedBy: ",")
             
             if elements.count == 7 {
-                
                 let id = elements[0]
                 let text = elements[1]
                 
-                guard let isDone = Bool(elements[4]) else { return nil }
+                guard 
+                    let isDone = Bool(elements[4]) ,
+                    let importance = elements[2].convertToImportance(),
+                    let dateCreation = elements[5].convertToDate()
+                else { return nil }
                 
-                let importanceString = elements[2]
-                let deadlineString = elements[3]
-                let dateCreationString = elements[5]
-                let dateChangingString = elements[6]
-                
-                
-                let importance = importanceString.convertToImportance()
-                let deadline = deadlineString.convertToDate()
-                
-                guard let dateCreation = dateCreationString.convertToDate() else { return nil }
-                
-                let dateChanging = dateChangingString.convertToDate()
+                let deadline = elements[3].convertToDate()
+                let dateChanging = elements[6].convertToDate()
+        
                 
                 let todoItem = TodoItem(id: id, text: text, importance: importance, deadline: deadline, isDone: isDone, dateCreation: dateCreation, dateChanging: dateChanging)
                 
                 todoItems.append(todoItem)
             } else {
-                print("Неверный формат CSV файла: в какой-то строке меньше семи столбцов")
+                print("Неверный формат CSV файла: в некоторой строке меньше семи столбцов")
             }
         }
 
         return todoItems
     }
     
-//  кажется, в ТЗ был только разбор CSV, но я на вский случай сделал конвертацию и в CSV
     static func convertToCSV(todoItems: [TodoItem]) -> String {
+        
+        if todoItems.isEmpty {
+            return ""
+        }
     
     var CSVResult = ""
     
@@ -151,7 +150,9 @@ extension TodoItem {
                 CSVLine += "\(unwrappedValue),"
             } else if let unwrappedValue = value as? Date {
                 CSVLine += "\(unwrappedValue.convertToString()),"
-            } else {
+            } else if let unwrappedValue = value as? Importance {
+                CSVLine += "\(unwrappedValue.rawValue),"
+            }  else {
                 CSVLine += ","
             }
         }
@@ -161,6 +162,8 @@ extension TodoItem {
         
         CSVResult.append(CSVLine)
     }
+        
+    CSVResult.removeLast()
     
     return CSVResult
 }

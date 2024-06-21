@@ -11,10 +11,7 @@ class FileManagerService {
     
     static let shared = FileManagerService()
     
-
-    
     func writeDataToFile(withName fileName: String, data: Any) throws {
-        
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: data, options: [])
             
@@ -22,13 +19,11 @@ class FileManagerService {
             
             do {
                 try jsonData.write(to: path)
-                print("Success saving")
             } catch {
                 print("Error saving data to file")
                 throw error
             }
         }
-        
         catch {
             print("Error converting data from Any to Data")
             throw error
@@ -68,6 +63,4 @@ class FileManagerService {
         
         return path
     }
-    
-    
 }

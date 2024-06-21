@@ -8,7 +8,6 @@ extension String {
         if let decodedDate = dateFormatter.date(from: self) {
             return decodedDate
         }
-        
         return nil
     }
     

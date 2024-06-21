@@ -16,7 +16,6 @@ class FileCache {
         if noSameItem(withId: todoItem.id) {
             todoItems.append(todoItem)
         }
-        
     }
     
     func deleteTodoItem(byId id: String) {
@@ -34,13 +33,11 @@ class FileCache {
                 return false
             }
         }
-        
         return true
     }
     
     
     func saveTodoItemsToFile() throws {
-        
         let arrayOfJSONs = todoItems.map { $0.json }
         
         do {
@@ -53,39 +50,24 @@ class FileCache {
     
     
     func getTodoItemsFromFile() throws {
-        
         guard let data = FileManagerService.shared.readDataFromFile(withName: "todoItems") else { return }
         
-        
         do {
-            if let dataAsJSON = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
+            if let itemsAsJSON = try JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
                 
+                var todoItemsFromJSON = [TodoItem]()
                 
-//           -->
-                var todoItemsFromFile: [TodoItem] = []
-                
-                for itemAsJSON in dataAsJSON {
-                    if let todoItem = TodoItem.parse(json: itemAsJSON) {
-                        todoItemsFromFile.append(todoItem)
+                for itemAsJson in itemsAsJSON {
+                    if let parsedTodoItem = TodoItem.parse(json: itemAsJson) {
+                        todoItemsFromJSON.append(parsedTodoItem)
                     }
                 }
-                todoItems = todoItemsFromFile
-//           -->
                 
-//                ВОПРОС: как сделать выделенный блок (--> ... <--) кода короче?
-//                Казалось бы, можно как-то так:
-
-//                todoItems = dataAsJSON.map { TodoItem.parse(json: $0)! }
-                
-//                Но так делать нельзя, потому что в проде не рекомендуюется использовать ! для unwrapped optional
-//                То есть возможно ли безопсано развернуть optional в короткой записи?
-                
+                todoItems = todoItemsFromJSON
             }
-            
         } catch {
             print("Ошибка при преобразовании Data в [[String: Any]]: \(error.localizedDescription)")
             throw error
         }
-        
     }
 }
