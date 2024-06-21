@@ -41,7 +41,7 @@ extension TodoItem {
               let text = jsonObject["text"] as? String,
               let isDone = jsonObject["isDone"] as? Bool,
               let dateCreationAsString = jsonObject["dateCreation"] as? String
-              
+                
         else { return nil }
         
         let importanceString = jsonObject["importance"] as? String
@@ -53,9 +53,9 @@ extension TodoItem {
         }
         
         // проверяем, удалось ли перевести dateCreation из типа String в тип Date
-        guard 
+        guard
             let dateCreation = dateCreationAsString.convertToDate()
-            
+                
         else { return nil }
         
         // определяем необязательные поля и изначально инициализируем их nil
@@ -82,23 +82,23 @@ extension TodoItem {
         
     }
     
-
     
-//    данная функция требует чтобы столбцы, находящиеся в файле типа CSV, шли в порядке, как в инициализаторе TodoItem
-//    то есть: id, text, importance, deadline, isDone, dateCreation, dateChanging
-//    (конечно, некоторые опциональные столбцы могут быть пропушены, однако если в некоторой строке будет пропущен неопциональный столбец, функция вернет nil)
     
-//    пример входных данный, которые может обрабатывать функция:
-//let CSVExample = """
-//4ocnho43yrpq,write to Misha,,,false,2024-06-18 20:05:42,2023-06-18 11:06:29
-//fu39ubjhaq12,finish the program,,,true,2024-06-18 15:05:42,
-//"""
+    //    данная функция требует чтобы столбцы, находящиеся в файле типа CSV, шли в порядке, как в инициализаторе TodoItem
+    //    то есть: id, text, importance, deadline, isDone, dateCreation, dateChanging
+    //    (конечно, некоторые опциональные столбцы могут быть пропушены, однако если в некоторой строке будет пропущен неопциональный столбец, функция вернет nil)
+    
+    //    пример входных данный, которые может обрабатывать функция:
+    //let CSVExample = """
+    //4ocnho43yrpq,write to Misha,,,false,2024-06-18 20:05:42,2023-06-18 11:06:29
+    //fu39ubjhaq12,finish the program,,,true,2024-06-18 15:05:42,
+    //"""
     static func parseCSV(_ csvString: String) -> [TodoItem]? {
         
         let lines = csvString.split(separator: "\n").map { String($0) }
-
+        
         var todoItems = [TodoItem]()
-
+        
         for line in lines {
             let elements = line.components(separatedBy: ",")
             
@@ -106,7 +106,7 @@ extension TodoItem {
                 let id = elements[0]
                 let text = elements[1]
                 
-                guard 
+                guard
                     let isDone = Bool(elements[4]) ,
                     let importance = elements[2].convertToImportance(),
                     let dateCreation = elements[5].convertToDate()
@@ -114,7 +114,7 @@ extension TodoItem {
                 
                 let deadline = elements[3].convertToDate()
                 let dateChanging = elements[6].convertToDate()
-        
+                
                 
                 let todoItem = TodoItem(id: id, text: text, importance: importance, deadline: deadline, isDone: isDone, dateCreation: dateCreation, dateChanging: dateChanging)
                 
@@ -123,7 +123,7 @@ extension TodoItem {
                 print("Неверный формат CSV файла: в некоторой строке меньше семи столбцов")
             }
         }
-
+        
         return todoItems
     }
     
@@ -132,39 +132,39 @@ extension TodoItem {
         if todoItems.isEmpty {
             return ""
         }
-    
-    var CSVResult = ""
-    
-    for todoItem in todoItems {
         
-        //      используем этот необычный метод, чтобы получить доступ к полям структуры, не обращаясь к ним напрямую по именам
-        let mirror = Mirror(reflecting: todoItem)
+        var CSVResult = ""
         
-        var CSVLine = ""
-        
-        for (_, value) in mirror.children {
+        for todoItem in todoItems {
             
-            if let unwrappedValue = value as? String {
-                CSVLine += "\(unwrappedValue),"
-            } else if let unwrappedValue = value as? Bool {
-                CSVLine += "\(unwrappedValue),"
-            } else if let unwrappedValue = value as? Date {
-                CSVLine += "\(unwrappedValue.convertToString()),"
-            } else if let unwrappedValue = value as? Importance {
-                CSVLine += "\(unwrappedValue.rawValue),"
-            }  else {
-                CSVLine += ","
+            //      используем этот необычный метод, чтобы получить доступ к полям структуры, не обращаясь к ним напрямую по именам
+            let mirror = Mirror(reflecting: todoItem)
+            
+            var CSVLine = ""
+            
+            for (_, value) in mirror.children {
+                
+                if let unwrappedValue = value as? String {
+                    CSVLine += "\(unwrappedValue),"
+                } else if let unwrappedValue = value as? Bool {
+                    CSVLine += "\(unwrappedValue),"
+                } else if let unwrappedValue = value as? Date {
+                    CSVLine += "\(unwrappedValue.convertToString()),"
+                } else if let unwrappedValue = value as? Importance {
+                    CSVLine += "\(unwrappedValue.rawValue),"
+                }  else {
+                    CSVLine += ","
+                }
             }
+            
+            CSVLine.removeLast() //убираем последнюю запятую из строки
+            CSVLine.append("\n")
+            
+            CSVResult.append(CSVLine)
         }
         
-        CSVLine.removeLast() //убираем последнюю запятую из строки
-        CSVLine.append("\n")
+        CSVResult.removeLast()
         
-        CSVResult.append(CSVLine)
+        return CSVResult
     }
-        
-    CSVResult.removeLast()
-    
-    return CSVResult
-}
 }
